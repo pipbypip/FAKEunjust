@@ -12,6 +12,8 @@ const OPPOSITES = {
   right: "left",
 };
 
+const COLOR_PALETTE = ["#ff6b6b", "#5f8dff", "#ffd166", "#4be28f", "#ef8bff", "#8de3ff"];
+
 class GameState {
   static IDLE = "idle";
   static LOADING = "loading";
@@ -22,9 +24,9 @@ class GameState {
 }
 
 class StorageManager {
-  constructor() {
-    this.bestKey = "snake-unjust.best";
-    this.settingsKey = "snake-unjust.settings";
+  constructor(prefix) {
+    this.bestKey = `${prefix}.best`;
+    this.settingsKey = `${prefix}.settings`;
     this.defaults = {
       gridSize: 20,
       mode: "classic",
@@ -95,9 +97,10 @@ class AudioManager {
 }
 
 class SnakeGame {
-  constructor(storage, audio) {
+  constructor(storage, audio, variant) {
     this.storage = storage;
     this.audio = audio;
+    this.variant = variant;
     this.settings = storage.loadSettings();
     this.bestScore = storage.loadBest();
     this.state = GameState.IDLE;
@@ -110,9 +113,9 @@ class SnakeGame {
     this.gridSize = this.settings.gridSize;
     const center = Math.floor(this.gridSize / 2);
     this.snake = [
-      { x: center, y: center },
-      { x: center - 1, y: center },
-      { x: center - 2, y: center },
+      { x: center, y: center, color: this.pickColor(0) },
+      { x: center - 1, y: center, color: this.pickColor(1) },
+      { x: center - 2, y: center, color: this.pickColor(2) },
     ];
     this.direction = DIRECTIONS.right;
     this.directionQueue = [];
@@ -124,7 +127,13 @@ class SnakeGame {
     this.speed = 7;
     this.stepSeconds = 1 / this.speed;
     this.accumulator = 0;
+    this.foodColor = this.pickColor(3);
     this.spawnFood();
+  }
+
+  pickColor(offset) {
+    if (this.variant !== "snakeunjust") return "#7dffd0";
+    return COLOR_PALETTE[offset % COLOR_PALETTE.length];
   }
 
   startLoading(now) {
@@ -189,7 +198,7 @@ class SnakeGame {
   step(now) {
     this.direction = this.directionQueue.shift() || this.direction;
     const head = this.snake[0];
-    const next = { x: head.x + this.direction.x, y: head.y + this.direction.y };
+    const next = { x: head.x + this.direction.x, y: head.y + this.direction.y, color: head.color };
 
     if (this.settings.mode === "wrap") {
       next.x = (next.x + this.gridSize) % this.gridSize;
@@ -206,6 +215,7 @@ class SnakeGame {
       return;
     }
 
+    if (this.variant === "snakeunjust") next.color = this.foodColor;
     this.snake.unshift(next);
     if (ate) {
       this.eatFood(now);
@@ -249,6 +259,9 @@ class SnakeGame {
       }
     }
     this.food = candidates[Math.floor(Math.random() * candidates.length)] || { x: 0, y: 0 };
+    if (this.variant === "snakeunjust") {
+      this.foodColor = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)];
+    }
   }
 
   isOutside(cell) {
@@ -332,17 +345,14 @@ class Renderer {
     const ctx = this.ctx;
     const center = x + cell / 2;
     const radius = cell * (0.24 + pulse * 0.08);
+    const foodColor = this.game.variant === "snakeunjust" ? this.game.foodColor : "#ffcf5a";
     ctx.shadowBlur = cell * 0.42;
-    ctx.shadowColor = "rgba(255,207,90,0.7)";
-    ctx.fillStyle = "#ffcf5a";
+    ctx.shadowColor = foodColor;
+    ctx.fillStyle = foodColor;
     ctx.beginPath();
     ctx.arc(center, y + cell / 2, radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.fillStyle = "rgba(255,255,255,0.35)";
-    ctx.beginPath();
-    ctx.arc(center - radius * 0.32, y + cell / 2 - radius * 0.32, radius * 0.25, 0, Math.PI * 2);
-    ctx.fill();
   }
 
   drawSnake() {
@@ -351,16 +361,15 @@ class Renderer {
       const inset = Math.max(2, Math.floor(cell * 0.12));
       const size = cell - inset * 2;
       const ctx = this.ctx;
-      ctx.fillStyle = index === 0 ? "#7dffd0" : `hsl(158 66% ${Math.max(42, 72 - index * 2)}%)`;
+      const color = this.game.variant === "snakeunjust"
+        ? part.color
+        : index === 0
+          ? "#7dffd0"
+          : `hsl(158 66% ${Math.max(42, 72 - index * 2)}%)`;
+      ctx.fillStyle = color;
       ctx.fillRect(x + inset, y + inset, size, size);
       ctx.fillStyle = "rgba(255,255,255,0.18)";
       ctx.fillRect(x + inset, y + inset, size, Math.max(2, size * 0.22));
-      if (index === 0) {
-        ctx.fillStyle = "#0b1713";
-        const eye = Math.max(2, Math.floor(cell * 0.08));
-        ctx.fillRect(x + cell * 0.62, y + cell * 0.3, eye, eye);
-        ctx.fillRect(x + cell * 0.62, y + cell * 0.58, eye, eye);
-      }
     });
   }
 
@@ -389,32 +398,34 @@ class Renderer {
 }
 
 class UIManager {
-  constructor(game) {
+  constructor(root, game, suffix, labels) {
+    this.root = root;
     this.game = game;
+    this.labels = labels;
     this.els = {
-      score: document.querySelector("#score"),
-      bestScore: document.querySelector("#bestScore"),
-      level: document.querySelector("#level"),
-      speed: document.querySelector("#speed"),
-      mode: document.querySelector("#mode"),
-      comboChip: document.querySelector("#comboChip"),
-      overlay: document.querySelector("#overlay"),
-      overlayKicker: document.querySelector("#overlayKicker"),
-      overlayTitle: document.querySelector("#overlayTitle"),
-      overlayText: document.querySelector("#overlayText"),
-      helpPanel: document.querySelector("#helpPanel"),
-      primaryAction: document.querySelector("#primaryAction"),
-      pauseButton: document.querySelector("#pauseButton"),
-      soundButton: document.querySelector("#soundButton"),
-      timelineFill: document.querySelector("#timelineFill"),
-      settingsButton: document.querySelector("#settingsButton"),
-      settingsPanel: document.querySelector("#settingsPanel"),
-      gridSize: document.querySelector("#gridSize"),
-      wallMode: document.querySelector("#wallMode"),
-      difficulty: document.querySelector("#difficulty"),
-      visualFilter: document.querySelector("#visualFilter"),
-      soundEnabled: document.querySelector("#soundEnabled"),
-      scanlines: document.querySelector("#scanlines"),
+      score: root.querySelector(`#score${suffix}`),
+      bestScore: root.querySelector(`#bestScore${suffix}`),
+      level: root.querySelector(`#level${suffix}`),
+      speed: root.querySelector(`#speed${suffix}`),
+      mode: root.querySelector(`#mode${suffix}`),
+      comboChip: root.querySelector(`#comboChip${suffix}`),
+      overlay: root.querySelector(`#overlay${suffix}`),
+      overlayKicker: root.querySelector(`#overlayKicker${suffix}`),
+      overlayTitle: root.querySelector(`#overlayTitle${suffix}`),
+      overlayText: root.querySelector(`#overlayText${suffix}`),
+      helpPanel: root.querySelector(`#helpPanel${suffix}`),
+      primaryAction: root.querySelector(`#primaryAction${suffix}`),
+      pauseButton: root.querySelector(`#pauseButton${suffix}`),
+      soundButton: root.querySelector(`#soundButton${suffix}`),
+      timelineFill: root.querySelector(`#timelineFill${suffix}`),
+      settingsButton: root.querySelector(`#settingsButton${suffix}`),
+      settingsPanel: root.querySelector(`#settingsPanel${suffix}`),
+      gridSize: root.querySelector(`#gridSize${suffix}`),
+      wallMode: root.querySelector(`#wallMode${suffix}`),
+      difficulty: root.querySelector(`#difficulty${suffix}`),
+      visualFilter: root.querySelector(`#visualFilter${suffix}`),
+      soundEnabled: root.querySelector(`#soundEnabled${suffix}`),
+      scanlines: root.querySelector(`#scanlines${suffix}`),
     };
   }
 
@@ -454,11 +465,11 @@ class UIManager {
 
   syncOverlay() {
     const overlays = {
-      [GameState.IDLE]: ["hidden player mode", "FAKEunjust", "Press Enter or tap Start to wake the mini-game.", "Start"],
+      [GameState.IDLE]: ["hidden player mode", this.labels.title, this.labels.idleText, "Start"],
       [GameState.LOADING]: ["buffering", "Buffering...", "Signal found. Preparing the grid.", "Buffering..."],
       [GameState.PAUSED]: ["paused", "Paused", "Press Space or tap Resume to continue.", "Resume"],
       [GameState.GAME_OVER]: ["signal lost", "Game Over", `Final score ${this.game.score}. Press Enter to restart.`, "Restart"],
-      [GameState.SETTINGS]: ["settings", "Settings", "Adjust the run, then close settings or press Enter to start.", "Start"],
+      [GameState.SETTINGS]: ["settings", "Settings", "Adjust settings, then press Enter to start.", "Start"],
     };
     const data = overlays[this.game.state];
     this.els.overlay.hidden = !data;
@@ -477,7 +488,8 @@ class UIManager {
 }
 
 class InputManager {
-  constructor(game, ui) {
+  constructor(root, game, ui) {
+    this.root = root;
     this.game = game;
     this.ui = ui;
     this.touchStart = null;
@@ -485,16 +497,16 @@ class InputManager {
   }
 
   bind() {
-    document.addEventListener("keydown", (event) => this.onKey(event));
-    document.querySelector("#primaryAction").addEventListener("click", () => this.primaryAction());
-    document.querySelector("#pauseButton").addEventListener("click", () => this.togglePause());
-    document.querySelector("#settingsButton").addEventListener("click", () => this.toggleSettings());
-    document.querySelector("#soundButton").addEventListener("click", () => {
+    this.ui.els.primaryAction.addEventListener("click", () => this.primaryAction());
+    this.ui.els.pauseButton.addEventListener("click", () => this.togglePause());
+    this.ui.els.settingsButton.addEventListener("click", () => this.toggleSettings());
+    this.ui.els.soundButton.addEventListener("click", () => {
       const next = { ...this.game.settings, sound: !this.game.settings.sound };
       this.game.applySettings(next);
       this.ui.syncSettingsForm();
     });
-    document.querySelector(".touch-pad").addEventListener("click", (event) => {
+    const touchPad = this.root.querySelector(".touch-pad");
+    touchPad.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-dir]");
       if (!button) return;
       this.move(button.dataset.dir);
@@ -507,12 +519,22 @@ class InputManager {
         this.game.state = GameState.SETTINGS;
       });
     }
-    const canvas = document.querySelector("#gameCanvas");
+    const canvas = this.root.querySelector("canvas");
     canvas.addEventListener("touchstart", (event) => {
       const touch = event.changedTouches[0];
       this.touchStart = { x: touch.clientX, y: touch.clientY };
     }, { passive: true });
     canvas.addEventListener("touchend", (event) => this.onTouchEnd(event), { passive: true });
+  }
+
+  onTouchEnd(event) {
+    if (!this.touchStart) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - this.touchStart.x;
+    const dy = touch.clientY - this.touchStart.y;
+    this.touchStart = null;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+    this.move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
   }
 
   onKey(event) {
@@ -551,16 +573,6 @@ class InputManager {
     }
   }
 
-  onTouchEnd(event) {
-    if (!this.touchStart) return;
-    const touch = event.changedTouches[0];
-    const dx = touch.clientX - this.touchStart.x;
-    const dy = touch.clientY - this.touchStart.y;
-    this.touchStart = null;
-    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
-    this.move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
-  }
-
   move(direction) {
     if (this.game.state === GameState.IDLE) this.game.startLoading(performance.now());
     this.game.queueDirection(direction);
@@ -591,27 +603,85 @@ class InputManager {
   }
 }
 
-const storage = new StorageManager();
-const game = new SnakeGame(storage, null);
-const audio = new AudioManager(game.settings);
-game.audio = audio;
-const renderer = new Renderer(document.querySelector("#gameCanvas"), game);
-const ui = new UIManager(game);
-new InputManager(game, ui);
+class GameController {
+  constructor(config) {
+    this.panel = document.querySelector(config.panelSelector);
+    this.storage = new StorageManager(config.storagePrefix);
+    this.game = new SnakeGame(this.storage, null, config.variant);
+    this.audio = new AudioManager(this.game.settings);
+    this.game.audio = this.audio;
+    this.renderer = new Renderer(this.panel.querySelector("canvas"), this.game);
+    this.ui = new UIManager(this.panel, this.game, config.suffix, config.labels);
+    this.input = new InputManager(this.panel, this.game, this.ui);
+    this.ui.syncSettingsForm();
+    this.ui.update();
+  }
+
+  frame(now, deltaSeconds) {
+    if (this.game.state === GameState.LOADING && now - this.game.loadingStarted >= 900) {
+      this.game.startPlaying(now);
+    }
+    this.game.update(deltaSeconds, now);
+    this.renderer.render(now);
+    this.ui.update();
+  }
+}
+
+const controllers = {
+  snake: new GameController({
+    panelSelector: "#playerSnake",
+    storagePrefix: "snake-unjust.snake",
+    suffix: "",
+    variant: "snake",
+    labels: {
+      title: "FAKEunjust",
+      idleText: "Press Enter or tap Start to wake the mini-game.",
+    },
+  }),
+  snakeunjust: new GameController({
+    panelSelector: "#playerSnakeUnjust",
+    storagePrefix: "snake-unjust.snakeunjust",
+    suffix: "2",
+    variant: "snakeunjust",
+    labels: {
+      title: "snakeunjust",
+      idleText: "Color snake mode: collect mini snakes and chain combos.",
+    },
+  }),
+};
+
+let activeTab = "snake";
+const tabs = Array.from(document.querySelectorAll(".tab"));
+const panels = {
+  snake: document.querySelector('[data-panel="snake"]'),
+  snakeunjust: document.querySelector('[data-panel="snakeunjust"]'),
+};
+
+function setActiveTab(tabName) {
+  activeTab = tabName;
+  tabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.tab === tabName));
+  for (const [key, panel] of Object.entries(panels)) {
+    panel.hidden = key !== tabName;
+  }
+}
+
+tabs.forEach((tab) => {
+  tab.addEventListener("click", () => setActiveTab(tab.dataset.tab));
+});
+
+document.addEventListener("keydown", (event) => {
+  controllers[activeTab].input.onKey(event);
+});
 
 let lastFrame = performance.now();
 function frame(now) {
-  if (game.state === GameState.LOADING && now - game.loadingStarted >= 900) {
-    game.startPlaying(now);
-  }
   const deltaSeconds = (now - lastFrame) / 1000;
   lastFrame = now;
-  game.update(deltaSeconds, now);
-  renderer.render(now);
-  ui.update();
+  for (const controller of Object.values(controllers)) {
+    controller.frame(now, deltaSeconds);
+  }
   requestAnimationFrame(frame);
 }
 
-ui.syncSettingsForm();
-ui.update();
+setActiveTab("snake");
 requestAnimationFrame(frame);

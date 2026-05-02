@@ -7,8 +7,13 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="shell" aria-label="FAKEunjust game">
-      <section class="player" id="player">
+    <main class="shell" aria-label="FAKEunjust game hub">
+      <nav class="game-tabs" aria-label="Game tabs">
+        <button class="tab is-active" data-tab="snake" type="button">snake</button>
+        <button class="tab" data-tab="snakeunjust" type="button">snakeunjust</button>
+      </nav>
+
+      <section class="player is-active" data-panel="snake" id="playerSnake">
         <div class="status-bar">
           <div class="brand">
             <span class="signal-dot" aria-hidden="true"></span>
@@ -95,6 +100,96 @@
         <button data-dir="down" type="button" aria-label="Move down">v</button>
         <button data-dir="right" type="button" aria-label="Move right">&gt;</button>
       </nav>
+
+      </section>
+
+      <section class="player" data-panel="snakeunjust" id="playerSnakeUnjust" hidden>
+        <div class="status-bar">
+          <div class="brand">
+            <span class="signal-dot" aria-hidden="true"></span>
+            <span>snakeunjust</span>
+          </div>
+          <div class="metrics" aria-live="polite">
+            <span>Score <strong id="score2">0</strong></span>
+            <span>Best <strong id="bestScore2">0</strong></span>
+            <span>Lvl <strong id="level2">1</strong></span>
+            <span>Speed <strong id="speed2">7</strong></span>
+            <span>Mode <strong id="mode2">Classic</strong></span>
+          </div>
+        </div>
+
+        <div class="screen-wrap">
+          <canvas id="gameCanvas2" width="640" height="640" aria-label="Game board"></canvas>
+          <div class="hud-chip" id="comboChip2">Combo x1</div>
+          <div class="scanlines" id="scanlines2" aria-hidden="true"></div>
+          <div class="overlay" id="overlay2">
+            <p class="kicker" id="overlayKicker2">color snake mode</p>
+            <h1 id="overlayTitle2">snakeunjust</h1>
+            <p id="overlayText2">Press Enter or tap Start.</p>
+            <div class="help-panel" id="helpPanel2" aria-label="How to play">
+              <p><strong>How to play</strong></p>
+              <p>Collect the mini snakes. Every pickup grows your trail and score.</p>
+              <p>Combo rises when pickups are within 4 seconds. Max x5.</p>
+              <p>Space pause, Enter start/restart, Escape settings.</p>
+            </div>
+            <button class="primary" id="primaryAction2" type="button">Start</button>
+          </div>
+        </div>
+
+        <div class="control-bar">
+          <button class="icon-button" id="pauseButton2" type="button" aria-label="Pause or resume">II</button>
+          <div class="fake-timeline" aria-hidden="true">
+            <span id="timelineFill2"></span>
+          </div>
+          <button class="icon-button" id="soundButton2" type="button" aria-label="Toggle sound">S</button>
+          <button class="settings-toggle" id="settingsButton2" type="button">Settings</button>
+        </div>
+
+        <section class="settings" id="settingsPanel2" aria-label="Game settings" hidden>
+          <label>
+            Grid
+            <select id="gridSize2">
+              <option value="16">16 x 16</option>
+              <option value="20">20 x 20</option>
+              <option value="24">24 x 24</option>
+              <option value="30">30 x 30</option>
+            </select>
+          </label>
+          <label>
+            Mode
+            <select id="wallMode2">
+              <option value="classic">Classic walls</option>
+              <option value="wrap">Wrap</option>
+            </select>
+          </label>
+          <label>
+            Difficulty
+            <select id="difficulty2">
+              <option value="chill">Chill</option>
+              <option value="normal">Normal</option>
+              <option value="boss">Boss</option>
+            </select>
+          </label>
+          <label>
+            Visual filter
+            <select id="visualFilter2">
+              <option value="clean">Clean</option>
+              <option value="scanline">Scanline</option>
+            </select>
+          </label>
+          <label class="check">
+            <input id="soundEnabled2" type="checkbox" />
+            Sound
+          </label>
+        </section>
+
+        <nav class="touch-pad touch-pad-color" aria-label="Touch controls">
+          <button data-dir="up" type="button" aria-label="Move up" class="snake-key snake-red">R</button>
+          <button data-dir="left" type="button" aria-label="Move left" class="snake-key snake-blue">B</button>
+          <button data-dir="down" type="button" aria-label="Move down" class="snake-key snake-yellow">Y</button>
+          <button data-dir="right" type="button" aria-label="Move right" class="snake-key snake-green">G</button>
+        </nav>
+      </section>
     </main>
 
     <script src="./main.js" defer></script>

@@ -44,6 +44,28 @@ select {
   gap: 18px;
 }
 
+.game-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  background: #1a1d23;
+  text-transform: lowercase;
+  cursor: pointer;
+}
+
+.tab.is-active {
+  color: var(--text);
+  border-color: rgba(69, 240, 170, 0.65);
+  background: #24362f;
+}
+
 .player {
   width: 100%;
   border: 1px solid var(--line);
@@ -51,6 +73,10 @@ select {
   background: linear-gradient(180deg, #202329, #14161a);
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
   overflow: hidden;
+}
+
+.player[hidden] {
+  display: none;
 }
 
 .status-bar,
@@ -315,6 +341,26 @@ h1 {
 
 .touch-pad button[data-dir="right"] {
   grid-column: 3;
+}
+
+.touch-pad-color .snake-key {
+  font-weight: 900;
+}
+
+.snake-red {
+  background: #4a2026;
+}
+
+.snake-blue {
+  background: #1b2c50;
+}
+
+.snake-yellow {
+  background: #4c4319;
+}
+
+.snake-green {
+  background: #1f3d2f;
 }
 
 @media (hover: none), (max-width: 720px) {
