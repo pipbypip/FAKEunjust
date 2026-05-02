@@ -148,7 +148,7 @@ class Renderer {
   constructor(canvas, game) { this.canvas = canvas; this.ctx = canvas.getContext("2d"); this.game = game; this.board = { x: 0, y: 0, size: 0, cell: 0 }; }
   resize() {
     const rect = this.canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const cssSize = Math.floor(Math.min(rect.width, rect.height));
     const target = Math.max(300, Math.floor(cssSize * dpr));
     if (this.canvas.width !== target) this.canvas.width = target;
@@ -278,10 +278,15 @@ class InputManager {
     this.root.querySelector(".touch-pad").addEventListener("click", (event) => { const b = event.target.closest("button[data-dir]"); if (b) this.move(b.dataset.dir); });
     for (const input of this.ui.els.settingsPanel.querySelectorAll("select,input")) input.addEventListener("change", () => { this.game.applySettings(this.ui.readSettingsForm()); this.ui.syncSettingsForm(); this.ui.setSettingsVisible(true); this.game.state = GameState.SETTINGS; });
     const canvas = this.root.querySelector("canvas");
-    canvas.addEventListener("touchstart", (event) => { const t = event.changedTouches[0]; this.touchStart = { x: t.clientX, y: t.clientY }; }, { passive: true });
-    canvas.addEventListener("touchend", (event) => this.onTouchEnd(event), { passive: true });
+    canvas.addEventListener("touchstart", (event) => {
+      event.preventDefault();
+      const t = event.changedTouches[0];
+      this.touchStart = { x: t.clientX, y: t.clientY };
+    }, { passive: false });
+    canvas.addEventListener("touchend", (event) => this.onTouchEnd(event), { passive: false });
   }
   onTouchEnd(event) {
+    event.preventDefault();
     if (!this.touchStart) return;
     const t = event.changedTouches[0]; const dx = t.clientX - this.touchStart.x; const dy = t.clientY - this.touchStart.y; this.touchStart = null;
     if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
@@ -462,7 +467,7 @@ class PuzzleRenderer {
   constructor(canvas, game, movement) { this.canvas = canvas; this.ctx = canvas.getContext("2d"); this.game = game; this.movement = movement; this.board = { x: 0, y: 0, size: 0, cell: 0 }; }
   resize() {
     const rect = this.canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const css = Math.floor(Math.min(rect.width, rect.height));
     const target = Math.max(320, Math.floor(css * dpr));
     if (this.canvas.width !== target) this.canvas.width = target;
@@ -754,8 +759,19 @@ class PuzzleInputManager {
       this.game.hintSnakeId = null;
       this.movement.begin(snakeId);
     };
-    canvas.addEventListener("click", (e) => handle(e.clientX, e.clientY));
-    canvas.addEventListener("touchend", (e) => { const t = e.changedTouches[0]; handle(t.clientX, t.clientY); }, { passive: true });
+    if (window.PointerEvent) {
+      canvas.addEventListener("pointerup", (e) => {
+        if (e.pointerType === "touch") e.preventDefault();
+        handle(e.clientX, e.clientY);
+      });
+    } else {
+      canvas.addEventListener("click", (e) => handle(e.clientX, e.clientY));
+      canvas.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        const t = e.changedTouches[0];
+        handle(t.clientX, t.clientY);
+      }, { passive: false });
+    }
   }
   onKey(event) {
     if (event.key === "Enter") { event.preventDefault(); if (this.game.state === SnakePuzzleState.LEVEL_COMPLETE) this.game.nextLevel(); else this.game.state = SnakePuzzleState.PLAYING; }
@@ -807,7 +823,7 @@ let lastFrame = performance.now();
 function frame(now) {
   const deltaSeconds = (now - lastFrame) / 1000;
   lastFrame = now;
-  Object.values(controllers).forEach((controller) => controller.frame(now, deltaSeconds));
+  controllers[activeTab].frame(now, deltaSeconds);
   requestAnimationFrame(frame);
 }
 
