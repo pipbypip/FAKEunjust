@@ -102,6 +102,10 @@
             <input id="soundEnabled" type="checkbox" />
             Sound
           </label>
+          <label>
+            Volume
+            <input id="volumeSlider" type="range" min="0" max="1" step="0.05" value="0.8" />
+          </label>
         </section>
         <nav class="touch-pad" aria-label="Touch controls">
           <button data-dir="up" type="button" aria-label="Move up">^</button>
@@ -158,27 +162,16 @@
 
         <section class="settings" id="settingsPanel2" aria-label="Game settings" hidden>
           <label>
-            Grid
-            <select id="gridSize2">
-              <option value="16">16 x 16</option>
-              <option value="20">20 x 20</option>
-              <option value="24">24 x 24</option>
-              <option value="30">30 x 30</option>
-            </select>
-          </label>
-          <label>
-            Mode
-            <select id="wallMode2">
-              <option value="classic">Classic walls</option>
-              <option value="wrap">Wrap</option>
-            </select>
-          </label>
-          <label>
-            Difficulty
-            <select id="difficulty2">
-              <option value="chill">Chill</option>
-              <option value="normal">Normal</option>
-              <option value="boss">Boss</option>
+            Start Level
+            <select id="startLevel2">
+              <option value="0">Level 1</option>
+              <option value="9">Level 10</option>
+              <option value="24">Level 25</option>
+              <option value="49">Level 50</option>
+              <option value="74">Level 75</option>
+              <option value="99">Level 100</option>
+              <option value="119">Level 120</option>
+              <option value="139">Level 140</option>
             </select>
           </label>
           <label>
@@ -191,6 +184,10 @@
           <label class="check">
             <input id="soundEnabled2" type="checkbox" />
             Sound
+          </label>
+          <label>
+            Volume
+            <input id="volumeSlider2" type="range" min="0" max="1" step="0.05" value="0.8" />
           </label>
         </section>
 

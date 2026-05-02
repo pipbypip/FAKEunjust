@@ -21,7 +21,7 @@ class StorageManager {
   constructor(prefix) {
     this.bestKey = `${prefix}.best`;
     this.settingsKey = `${prefix}.settings`;
-    this.defaults = { gridSize: 20, mode: "classic", sound: true, visualFilter: "scanline", difficulty: "normal" };
+    this.defaults = { gridSize: 20, mode: "classic", sound: true, volume: 0.8, visualFilter: "scanline", difficulty: "normal", startLevel: 0 };
   }
   loadBest() { try { return Number(localStorage.getItem(this.bestKey) || 0); } catch { return 0; } }
   saveBest(score) { try { localStorage.setItem(this.bestKey, String(score)); } catch {} }
@@ -52,8 +52,10 @@ class AudioManager {
     const gain = audio.createGain();
     osc.type = type;
     osc.frequency.value = frequency;
+    const masterVol = this.settings.volume !== undefined ? Number(this.settings.volume) : 1;
+    if (masterVol <= 0) return;
     gain.gain.setValueAtTime(0.0001, audio.currentTime);
-    gain.gain.exponentialRampToValueAtTime(volume, audio.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(volume * masterVol, audio.currentTime + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + duration);
     osc.connect(gain).connect(audio.destination);
     osc.start();
@@ -232,16 +234,19 @@ class UIManager {
       pauseButton: root.querySelector(`#pauseButton${suffix}`), soundButton: root.querySelector(`#soundButton${suffix}`), timelineFill: root.querySelector(`#timelineFill${suffix}`),
       settingsButton: root.querySelector(`#settingsButton${suffix}`), settingsPanel: root.querySelector(`#settingsPanel${suffix}`), gridSize: root.querySelector(`#gridSize${suffix}`),
       wallMode: root.querySelector(`#wallMode${suffix}`), difficulty: root.querySelector(`#difficulty${suffix}`), visualFilter: root.querySelector(`#visualFilter${suffix}`),
-      soundEnabled: root.querySelector(`#soundEnabled${suffix}`), scanlines: root.querySelector(`#scanlines${suffix}`),
+      soundEnabled: root.querySelector(`#soundEnabled${suffix}`), volumeSlider: root.querySelector(`#volumeSlider${suffix}`), scanlines: root.querySelector(`#scanlines${suffix}`),
     };
   }
   syncSettingsForm() {
     const s = this.game.settings;
     this.els.gridSize.value = String(s.gridSize); this.els.wallMode.value = s.mode; this.els.difficulty.value = s.difficulty; this.els.visualFilter.value = s.visualFilter;
     this.els.soundEnabled.checked = s.sound; this.els.scanlines.hidden = s.visualFilter !== "scanline"; this.els.soundButton.textContent = s.sound ? "S" : "M";
+    const vol = s.volume ?? 0.8;
+    this.els.volumeSlider.value = String(vol);
+    this.els.volumeSlider.style.setProperty("--vol", (vol * 100).toFixed(1) + "%");
   }
   readSettingsForm() {
-    return { gridSize: Number(this.els.gridSize.value), mode: this.els.wallMode.value, difficulty: this.els.difficulty.value, visualFilter: this.els.visualFilter.value, sound: this.els.soundEnabled.checked };
+    return { gridSize: Number(this.els.gridSize.value), mode: this.els.wallMode.value, difficulty: this.els.difficulty.value, visualFilter: this.els.visualFilter.value, sound: this.els.soundEnabled.checked, volume: Number(this.els.volumeSlider.value) };
   }
   update() {
     this.els.score.textContent = String(this.game.score); this.els.bestScore.textContent = String(this.game.bestScore); this.els.level.textContent = String(this.game.level);
@@ -277,6 +282,7 @@ class InputManager {
     this.ui.els.soundButton.addEventListener("click", () => { const next = { ...this.game.settings, sound: !this.game.settings.sound }; this.game.applySettings(next); this.ui.syncSettingsForm(); });
     this.root.querySelector(".touch-pad").addEventListener("click", (event) => { const b = event.target.closest("button[data-dir]"); if (b) this.move(b.dataset.dir); });
     for (const input of this.ui.els.settingsPanel.querySelectorAll("select,input")) input.addEventListener("change", () => { this.game.applySettings(this.ui.readSettingsForm()); this.ui.syncSettingsForm(); this.ui.setSettingsVisible(true); this.game.state = GameState.SETTINGS; });
+    this.ui.els.volumeSlider.addEventListener("input", () => { const v = Number(this.ui.els.volumeSlider.value); this.ui.els.volumeSlider.style.setProperty("--vol", (v * 100).toFixed(1) + "%"); this.game.applySettings(this.ui.readSettingsForm()); });
     const canvas = this.root.querySelector("canvas");
     canvas.addEventListener("touchstart", (event) => {
       event.preventDefault();
@@ -331,7 +337,7 @@ class SnakePuzzleState {
 
 class LevelManager {
   constructor() {
-    this.levels = this.generateLevels(50);
+    this.levels = this.generateLevels(140);
   }
   generateLevels(count) {
     const levels = [];
@@ -349,10 +355,12 @@ class LevelManager {
   generateOne(levelIdx) {
     const rnd = this.seeded(1000 + levelIdx * 17);
     const tier = Math.floor(levelIdx / 10);
-    const gridSize = 12 + Math.min(10, tier * 2 + Math.floor(levelIdx / 8));
-    const snakeCount = Math.min(18, 5 + tier * 2 + Math.floor(levelIdx / 3));
-    const minLen = 4 + Math.min(3, tier);
-    const maxLen = 7 + Math.min(5, tier + Math.floor(levelIdx / 12));
+    // Grid scales from 12 up to 44 (doubles max movement squares vs original 22-cap)
+    const gridSize = 12 + Math.min(32, tier * 2 + Math.floor(levelIdx / 7));
+    // Snakes scale from 4 up to 40
+    const snakeCount = Math.min(40, 4 + tier * 2 + Math.floor(levelIdx / 4));
+    const minLen = 4 + Math.min(8, tier);
+    const maxLen = 7 + Math.min(12, tier + Math.floor(levelIdx / 10));
     const occupied = new Set();
     const snakes = [];
     let colorCursor = levelIdx % COLOR_PALETTE.length;
@@ -582,18 +590,23 @@ class PuzzleUIManager {
       overlay: root.querySelector("#overlay2"), overlayKicker: root.querySelector("#overlayKicker2"), overlayTitle: root.querySelector("#overlayTitle2"), overlayText: root.querySelector("#overlayText2"),
       help: root.querySelector("#helpPanel2"), start: root.querySelector("#primaryAction2"), pause: root.querySelector("#pauseButton2"), sound: root.querySelector("#soundButton2"),
       undo: root.querySelector("#undoButton2"), hint: root.querySelector("#hintButton2"), reset: root.querySelector("#resetButton2"), settings: root.querySelector("#settingsButton2"),
-      settingsPanel: root.querySelector("#settingsPanel2"), gridSize: root.querySelector("#gridSize2"), wallMode: root.querySelector("#wallMode2"), difficulty: root.querySelector("#difficulty2"), visualFilter: root.querySelector("#visualFilter2"), soundEnabled: root.querySelector("#soundEnabled2"),
-      scanlines: root.querySelector("#scanlines2"), comboChip: root.querySelector("#comboChip2"), timeline: root.querySelector("#timelineFill2"),
+      settingsPanel: root.querySelector("#settingsPanel2"), startLevel: root.querySelector("#startLevel2"), visualFilter: root.querySelector("#visualFilter2"), soundEnabled: root.querySelector("#soundEnabled2"),
+      volumeSlider: root.querySelector("#volumeSlider2"), scanlines: root.querySelector("#scanlines2"), comboChip: root.querySelector("#comboChip2"), timeline: root.querySelector("#timelineFill2"),
     };
   }
   syncSettingsForm() {
     const s = this.game.settings;
-    this.els.gridSize.value = String(s.gridSize); this.els.wallMode.value = s.mode; this.els.difficulty.value = s.difficulty; this.els.visualFilter.value = s.visualFilter; this.els.soundEnabled.checked = s.sound;
+    this.els.startLevel.value = String(s.startLevel ?? 0);
+    this.els.visualFilter.value = s.visualFilter ?? "clean";
+    this.els.soundEnabled.checked = s.sound;
     this.els.scanlines.hidden = s.visualFilter !== "scanline";
     this.els.sound.textContent = s.sound ? "S" : "M";
+    const vol = s.volume ?? 0.8;
+    this.els.volumeSlider.value = String(vol);
+    this.els.volumeSlider.style.setProperty("--vol", (vol * 100).toFixed(1) + "%");
   }
   readSettingsForm() {
-    return { gridSize: Number(this.els.gridSize.value), mode: this.els.wallMode.value, difficulty: this.els.difficulty.value, visualFilter: this.els.visualFilter.value, sound: this.els.soundEnabled.checked };
+    return { sound: this.els.soundEnabled.checked, volume: Number(this.els.volumeSlider.value), visualFilter: this.els.visualFilter.value, startLevel: Number(this.els.startLevel.value) };
   }
   update() {
     this.els.escaped.textContent = String(this.game.escapedCount);
@@ -630,7 +643,7 @@ class SnakePuzzleGame {
     this.collision = new CollisionSystem(this);
     this.levelIndex = 0;
     this.undoStack = [];
-    this.loadLevel(0);
+    this.loadLevel(this.settings.startLevel ?? 0);
   }
   loadLevel(index) {
     const level = this.levelManager.get(index);
@@ -746,7 +759,11 @@ class PuzzleInputManager {
     this.ui.els.hint.addEventListener("click", () => { this.game.hintSnakeId = this.game.findHint(); });
     this.ui.els.reset.addEventListener("click", () => this.game.resetLevel());
     this.ui.els.settings.addEventListener("click", () => { this.ui.els.settingsPanel.hidden = !this.ui.els.settingsPanel.hidden; });
-    for (const input of this.ui.els.settingsPanel.querySelectorAll("select,input")) input.addEventListener("change", () => { this.game.applySettings(this.ui.readSettingsForm()); this.ui.syncSettingsForm(); });
+    for (const input of this.ui.els.settingsPanel.querySelectorAll("select,input")) {
+      input.addEventListener("change", () => { this.game.applySettings(this.ui.readSettingsForm()); this.ui.syncSettingsForm(); });
+    }
+    this.ui.els.startLevel.addEventListener("change", () => { this.game.loadLevel(Number(this.ui.els.startLevel.value)); });
+    this.ui.els.volumeSlider.addEventListener("input", () => { const v = Number(this.ui.els.volumeSlider.value); this.ui.els.volumeSlider.style.setProperty("--vol", (v * 100).toFixed(1) + "%"); this.game.applySettings(this.ui.readSettingsForm()); });
     const canvas = this.root.querySelector("#gameCanvas2");
     const handle = (clientX, clientY) => {
       if (this.game.state === SnakePuzzleState.INTRO) this.game.state = SnakePuzzleState.PLAYING;
