@@ -9,11 +9,11 @@
   <body>
     <main class="shell" aria-label="FAKEunjust game hub">
       <nav class="game-tabs" aria-label="Game tabs">
-        <button class="tab is-active" data-tab="snake" type="button">snake</button>
-        <button class="tab" data-tab="snakeunjust" type="button">snakeunjust</button>
+        <button class="tab is-active" data-tab="snakeunjust" type="button">FAKE-unjam</button>
+        <button class="tab" data-tab="snake" type="button">snake</button>
       </nav>
 
-      <section class="player is-active" data-panel="snake" id="playerSnake">
+      <section class="player" data-panel="snake" id="playerSnake" hidden>
         <div class="status-bar">
           <div class="brand">
             <span class="signal-dot" aria-hidden="true"></span>
@@ -34,7 +34,7 @@
           <div class="scanlines" id="scanlines" aria-hidden="true"></div>
           <div class="overlay" id="overlay">
             <p class="kicker" id="overlayKicker">hidden player mode</p>
-            <h1 id="overlayTitle">FAKEunjust</h1>
+            <h1 id="overlayTitle">FAKE</h1>
             <p id="overlayText">Press Enter or tap Start to wake the mini-game.</p>
             <div class="help-panel" id="helpPanel" aria-label="How to play">
               <p><strong>How to play</strong></p>
@@ -100,7 +100,7 @@
         </nav>
       </section>
 
-      <section class="player" data-panel="snakeunjust" id="playerSnakeUnjust" hidden>
+      <section class="player is-active" data-panel="snakeunjust" id="playerSnakeUnjust">
         <div class="status-bar">
           <div class="brand">
             <span class="signal-dot" aria-hidden="true"></span>
@@ -109,6 +109,7 @@
           <div class="metrics" aria-live="polite">
             <span>Escaped <strong id="escaped2">0</strong>/<strong id="total2">0</strong></span>
             <span>Moves <strong id="moves2">0</strong></span>
+            <span>High <strong id="highScore2">0</strong></span>
             <span>Level <strong id="level2">1</strong></span>
             <span>State <strong id="state2">Intro</strong></span>
           </div>
@@ -120,13 +121,13 @@
           <div class="scanlines" id="scanlines2" aria-hidden="true"></div>
           <div class="overlay" id="overlay2">
             <p class="kicker" id="overlayKicker2">color snake mode</p>
-            <h1 id="overlayTitle2">snakeunjust</h1>
+            <h1 id="overlayTitle2">FAKE-unjam</h1>
             <p id="overlayText2">Press Enter or tap Start.</p>
             <div class="help-panel" id="helpPanel2" aria-label="How to play">
               <p><strong>How to play</strong></p>
-              <p>Collect only the highlighted target-color mini snake.</p>
-              <p>Wrong color ends the run. Correct pickups grow snake and score.</p>
-              <p>Combo rises when pickups are within 4 seconds. Max x5.</p>
+              <p>Tap a snake to slide it in its head direction.</p>
+              <p>Snakes move until blocked or fully exit the board.</p>
+              <p>Clear all snakes to finish the level.</p>
               <p>Space pause, Enter start/restart, Escape settings.</p>
             </div>
             <button class="primary" id="primaryAction2" type="button">Start</button>

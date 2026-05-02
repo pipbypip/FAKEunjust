@@ -326,34 +326,88 @@ class SnakePuzzleState {
 
 class LevelManager {
   constructor() {
-    this.levels = [
-      {
-        gridSize: 10, targetMoves: 15, obstacles: [],
-        snakes: [
-          { id: "green", color: "#6ee04d", direction: "right", cells: [{ x: 1, y: 1 }, { x: 0, y: 1 }] },
-          { id: "blue", color: "#4aa3ff", direction: "up", cells: [{ x: 1, y: 8 }, { x: 1, y: 9 }] },
-          { id: "purple", color: "#d65bff", direction: "up", cells: [{ x: 3, y: 7 }, { x: 3, y: 8 }, { x: 3, y: 9 }] },
-          { id: "yellow", color: "#ffcc3b", direction: "right", cells: [{ x: 6, y: 4 }, { x: 5, y: 4 }, { x: 4, y: 4 }] },
-          { id: "orange", color: "#ff7f40", direction: "right", cells: [{ x: 5, y: 3 }, { x: 4, y: 3 }] },
-          { id: "red", color: "#f24c4c", direction: "down", cells: [{ x: 8, y: 5 }, { x: 8, y: 4 }, { x: 8, y: 3 }] },
-        ],
-      },
-      {
-        gridSize: 10, targetMoves: 20, obstacles: [],
-        snakes: [
-          { id: "lime", color: "#b7e63f", direction: "right", cells: [{ x: 8, y: 8 }, { x: 7, y: 8 }, { x: 6, y: 8 }] },
-          { id: "cyan", color: "#5ad4ff", direction: "left", cells: [{ x: 5, y: 6 }, { x: 6, y: 6 }, { x: 7, y: 6 }] },
-          { id: "violet", color: "#c46bff", direction: "right", cells: [{ x: 4, y: 5 }, { x: 3, y: 5 }, { x: 2, y: 5 }] },
-          { id: "red2", color: "#f24c4c", direction: "down", cells: [{ x: 8, y: 2 }, { x: 8, y: 1 }] },
-          { id: "green2", color: "#6ee04d", direction: "up", cells: [{ x: 2, y: 8 }, { x: 2, y: 9 }] },
-          { id: "yellow2", color: "#ffcc3b", direction: "right", cells: [{ x: 3, y: 2 }, { x: 2, y: 2 }] },
-          { id: "blue2", color: "#4aa3ff", direction: "up", cells: [{ x: 0, y: 7 }, { x: 0, y: 8 }, { x: 0, y: 9 }] },
-        ],
-      },
-    ];
+    this.levels = this.generateLevels(50);
+  }
+  generateLevels(count) {
+    const levels = [];
+    for (let i = 0; i < count; i += 1) levels.push(this.generateOne(i));
+    return levels;
+  }
+  seeded(seed) {
+    let t = seed + 0x6D2B79F5;
+    return () => {
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  generateOne(levelIdx) {
+    const rnd = this.seeded(1000 + levelIdx * 17);
+    const tier = Math.floor(levelIdx / 10);
+    const gridSize = 12 + Math.min(10, tier * 2 + Math.floor(levelIdx / 8));
+    const snakeCount = Math.min(18, 5 + tier * 2 + Math.floor(levelIdx / 3));
+    const minLen = 4 + Math.min(3, tier);
+    const maxLen = 7 + Math.min(5, tier + Math.floor(levelIdx / 12));
+    const occupied = new Set();
+    const snakes = [];
+    let colorCursor = levelIdx % COLOR_PALETTE.length;
+
+    const inBounds = (x, y) => x >= 0 && y >= 0 && x < gridSize && y < gridSize;
+    const dirs = Object.values(DIRECTIONS);
+    const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
+    const nearestEdgeDir = (x, y) => {
+      const dists = [
+        { name: "left", v: x },
+        { name: "right", v: gridSize - 1 - x },
+        { name: "up", v: y },
+        { name: "down", v: gridSize - 1 - y },
+      ];
+      dists.sort((a, b) => a.v - b.v);
+      return dists[0].name;
+    };
+
+    for (let s = 0; s < snakeCount; s += 1) {
+      let built = null;
+      for (let attempt = 0; attempt < 220 && !built; attempt += 1) {
+        const start = { x: Math.floor(rnd() * gridSize), y: Math.floor(rnd() * gridSize) };
+        if (occupied.has(`${start.x},${start.y}`)) continue;
+        const length = minLen + Math.floor(rnd() * (maxLen - minLen + 1));
+        const cells = [{ ...start }];
+        const local = new Set([`${start.x},${start.y}`]);
+        for (let i = 1; i < length; i += 1) {
+          const tail = cells[cells.length - 1];
+          const options = dirs.filter((d) => {
+            const nx = tail.x + d.x;
+            const ny = tail.y + d.y;
+            return inBounds(nx, ny) && !occupied.has(`${nx},${ny}`) && !local.has(`${nx},${ny}`);
+          });
+          if (!options.length) break;
+          const chosen = pick(options);
+          const next = { x: tail.x + chosen.x, y: tail.y + chosen.y };
+          cells.push(next);
+          local.add(`${next.x},${next.y}`);
+        }
+        if (cells.length < minLen) continue;
+        const head = cells[0];
+        const direction = nearestEdgeDir(head.x, head.y);
+        built = {
+          id: `lv${levelIdx + 1}_s${s + 1}`,
+          color: COLOR_PALETTE[colorCursor % COLOR_PALETTE.length],
+          direction,
+          cells,
+        };
+      }
+      if (!built) continue;
+      snakes.push(built);
+      colorCursor += 1;
+      built.cells.forEach((c) => occupied.add(`${c.x},${c.y}`));
+    }
+    const targetMoves = Math.max(10, Math.floor(snakes.reduce((sum, s) => sum + s.cells.length, 0) * 0.7));
+    return { gridSize, targetMoves, obstacles: [], snakes };
   }
   get(index) {
-    const level = this.levels[index % this.levels.length];
+    const capped = Math.max(0, Math.min(this.levels.length - 1, index));
+    const level = this.levels[capped];
     return JSON.parse(JSON.stringify(level));
   }
 }
@@ -466,14 +520,18 @@ class PuzzleRenderer {
       c.shadowColor = "rgba(0,0,0,0.2)";
       c.shadowBlur = 5;
       c.beginPath();
-      c.roundRect(px + cellSize * 0.08, py + cellSize * 0.08, cellSize * 0.84, cellSize * 0.84, r);
+      c.roundRect(px + cellSize * 0.07, py + cellSize * 0.07, cellSize * 0.86, cellSize * 0.86, r);
       c.fill();
       c.shadowBlur = 0;
       c.fillStyle = "rgba(255,255,255,0.2)";
       c.beginPath();
-      c.roundRect(px + cellSize * 0.14, py + cellSize * 0.14, cellSize * 0.72, cellSize * 0.24, cellSize * 0.14);
+      c.roundRect(px + cellSize * 0.17, py + cellSize * 0.16, cellSize * 0.56, cellSize * 0.16, cellSize * 0.09);
       c.fill();
-      if (idx === 0) this.drawEyes(px, py, cellSize, snake.direction);
+      c.fillStyle = "rgba(255,255,255,0.08)";
+      c.beginPath();
+      c.arc(px + cellSize * 0.5, py + cellSize * 0.54, cellSize * 0.3, 0, Math.PI * 2);
+      c.fill();
+      if (idx === 0) this.drawHeadDetails(px, py, cellSize, snake.direction, snake.color);
       if (selected) {
         c.strokeStyle = "#0f172a";
         c.lineWidth = 2;
@@ -481,14 +539,23 @@ class PuzzleRenderer {
       }
     });
   }
-  drawEyes(px, py, cell, dir) {
+  drawHeadDetails(px, py, cell, dir, color) {
     const c = this.ctx;
+    c.fillStyle = color;
+    c.beginPath();
+    c.roundRect(px + cell * 0.06, py + cell * 0.06, cell * 0.88, cell * 0.88, cell * 0.46);
+    c.fill();
     const eye = (ox, oy) => {
       c.fillStyle = "#eaf6ff"; c.beginPath(); c.arc(px + ox * cell, py + oy * cell, cell * 0.12, 0, Math.PI * 2); c.fill();
       c.fillStyle = "#1f2937"; c.beginPath(); c.arc(px + ox * cell, py + oy * cell, cell * 0.06, 0, Math.PI * 2); c.fill();
     };
     const map = { right: [[0.72, 0.35], [0.72, 0.65]], left: [[0.28, 0.35], [0.28, 0.65]], up: [[0.35, 0.28], [0.65, 0.28]], down: [[0.35, 0.72], [0.65, 0.72]] };
     map[dir].forEach(([x, y]) => eye(x, y));
+    c.strokeStyle = "rgba(255,255,255,0.25)";
+    c.lineWidth = Math.max(1, cell * 0.04);
+    c.beginPath();
+    c.arc(px + cell * 0.5, py + cell * 0.5, cell * 0.35, Math.PI * 0.15, Math.PI * 0.85);
+    c.stroke();
   }
   cellFromPoint(clientX, clientY) {
     const rect = this.canvas.getBoundingClientRect();
@@ -506,7 +573,7 @@ class PuzzleUIManager {
     this.root = root;
     this.game = game;
     this.els = {
-      escaped: root.querySelector("#escaped2"), total: root.querySelector("#total2"), moves: root.querySelector("#moves2"), level: root.querySelector("#level2"), state: root.querySelector("#state2"),
+      escaped: root.querySelector("#escaped2"), total: root.querySelector("#total2"), moves: root.querySelector("#moves2"), highScore: root.querySelector("#highScore2"), level: root.querySelector("#level2"), state: root.querySelector("#state2"),
       overlay: root.querySelector("#overlay2"), overlayKicker: root.querySelector("#overlayKicker2"), overlayTitle: root.querySelector("#overlayTitle2"), overlayText: root.querySelector("#overlayText2"),
       help: root.querySelector("#helpPanel2"), start: root.querySelector("#primaryAction2"), pause: root.querySelector("#pauseButton2"), sound: root.querySelector("#soundButton2"),
       undo: root.querySelector("#undoButton2"), hint: root.querySelector("#hintButton2"), reset: root.querySelector("#resetButton2"), settings: root.querySelector("#settingsButton2"),
@@ -527,6 +594,7 @@ class PuzzleUIManager {
     this.els.escaped.textContent = String(this.game.escapedCount);
     this.els.total.textContent = String(this.game.totalSnakes);
     this.els.moves.textContent = String(this.game.moves);
+    this.els.highScore.textContent = String(this.game.highScore);
     this.els.level.textContent = String(this.game.levelIndex + 1);
     this.els.state.textContent = this.game.stateLabel();
     this.els.comboChip.textContent = this.game.hintSnakeId ? "Hint active" : "Tap snake";
@@ -536,7 +604,7 @@ class PuzzleUIManager {
   }
   syncOverlay() {
     const map = {
-      [SnakePuzzleState.INTRO]: ["tutorial", "snakeunjust", "Tap a snake to slide it out. Free all snakes to clear the board.", "Start"],
+      [SnakePuzzleState.INTRO]: ["tutorial", "FAKE-unjam", "Tap a snake to slide it out. Free all snakes to clear the board.", "Start"],
       [SnakePuzzleState.LEVEL_COMPLETE]: ["cleared", "Level Complete", `Moves used: ${this.game.moves}.`, "Next Level"],
     };
     const data = map[this.game.state];
@@ -552,6 +620,7 @@ class SnakePuzzleGame {
     this.storage = storage;
     this.audio = audio;
     this.settings = storage.loadSettings();
+    this.highScore = storage.loadBest();
     this.levelManager = new LevelManager();
     this.collision = new CollisionSystem(this);
     this.levelIndex = 0;
@@ -639,10 +708,15 @@ class SnakePuzzleGame {
   checkComplete() {
     if (this.snakes.length === 0) {
       this.state = SnakePuzzleState.LEVEL_COMPLETE;
+      const clearedLevel = this.levelIndex + 1;
+      if (clearedLevel > this.highScore) {
+        this.highScore = clearedLevel;
+        this.storage.saveBest(this.highScore);
+      }
       this.audio.play("win");
     }
   }
-  nextLevel() { this.loadLevel(this.levelIndex + 1); }
+  nextLevel() { this.loadLevel(Math.min(this.levelManager.levels.length - 1, this.levelIndex + 1)); }
   resetLevel() { this.loadLevel(this.levelIndex); }
   findHint() {
     for (const snake of this.snakes) if (this.canSnakeAdvance(snake) && !this.inBounds({ x: snake.cells[0].x + DIRECTIONS[snake.direction].x, y: snake.cells[0].y + DIRECTIONS[snake.direction].y })) return snake.id;
@@ -714,11 +788,11 @@ class PuzzleController {
 }
 
 const controllers = {
-  snake: new GameController({ panelSelector: "#playerSnake", storagePrefix: "snake-unjust.snake", suffix: "", labels: { title: "FAKEunjust", idleText: "Press Enter or tap Start to wake the mini-game." } }),
+  snake: new GameController({ panelSelector: "#playerSnake", storagePrefix: "snake-unjust.snake", suffix: "", labels: { title: "FAKE", idleText: "Press Enter or tap Start to wake the mini-game." } }),
   snakeunjust: new PuzzleController("#playerSnakeUnjust"),
 };
 
-let activeTab = "snake";
+let activeTab = "snakeunjust";
 const tabs = Array.from(document.querySelectorAll(".tab"));
 const panels = { snake: document.querySelector('[data-panel="snake"]'), snakeunjust: document.querySelector('[data-panel="snakeunjust"]') };
 function setActiveTab(tabName) {
@@ -737,5 +811,5 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-setActiveTab("snake");
+setActiveTab("snakeunjust");
 requestAnimationFrame(frame);
