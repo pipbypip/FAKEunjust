@@ -788,7 +788,7 @@ class PuzzleController {
 }
 
 const controllers = {
-  snake: new GameController({ panelSelector: "#playerSnake", storagePrefix: "snake-unjust.snake", suffix: "", labels: { title: "FAKE", idleText: "Press Enter or tap Start to wake the mini-game." } }),
+  snake: new GameController({ panelSelector: "#playerSnake", storagePrefix: "snake-unjust.snake", suffix: "", labels: { title: "FAKE-snake", idleText: "Press Enter or tap Start to wake the mini-game." } }),
   snakeunjust: new PuzzleController("#playerSnakeUnjust"),
 };
 

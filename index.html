@@ -4,10 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>FAKEunjust</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="./public/favicon/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./public/favicon/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./public/favicon/favicon-16x16.png" />
+    <link rel="manifest" href="./public/favicon/site.webmanifest" />
+    <link rel="shortcut icon" href="./public/favicon/favicon.ico" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="shell" aria-label="FAKEunjust game hub">
+      <header class="app-header" aria-label="FAKE game header">
+        <img class="app-logo" src="./public/logo/ChatGPT Image May 3, 2026, 02_09_51 AM.png" alt="FAKE logo" />
+      </header>
+
       <nav class="game-tabs" aria-label="Game tabs">
         <button class="tab is-active" data-tab="snakeunjust" type="button">FAKE-unjam</button>
         <button class="tab" data-tab="snake" type="button">snake</button>
@@ -17,7 +26,6 @@
         <div class="status-bar">
           <div class="brand">
             <span class="signal-dot" aria-hidden="true"></span>
-            <span>FAKEunjust</span>
           </div>
           <div class="metrics" aria-live="polite">
             <span>Score <strong id="score">0</strong></span>
@@ -34,7 +42,7 @@
           <div class="scanlines" id="scanlines" aria-hidden="true"></div>
           <div class="overlay" id="overlay">
             <p class="kicker" id="overlayKicker">hidden player mode</p>
-            <h1 id="overlayTitle">FAKE</h1>
+            <h1 id="overlayTitle">FAKE-snake</h1>
             <p id="overlayText">Press Enter or tap Start to wake the mini-game.</p>
             <div class="help-panel" id="helpPanel" aria-label="How to play">
               <p><strong>How to play</strong></p>
@@ -104,7 +112,6 @@
         <div class="status-bar">
           <div class="brand">
             <span class="signal-dot" aria-hidden="true"></span>
-            <span>snakeunjust</span>
           </div>
           <div class="metrics" aria-live="polite">
             <span>Escaped <strong id="escaped2">0</strong>/<strong id="total2">0</strong></span>
