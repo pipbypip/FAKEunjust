@@ -829,3 +829,60 @@ function frame(now) {
 
 setActiveTab("snakeunjust");
 requestAnimationFrame(frame);
+
+// ---- Neon FAKE text background ----
+(function () {
+  const canvas = document.getElementById("bg-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d", { alpha: true });
+
+  const WORD = "UJ FALUSI";
+  const COL_W = 188;
+  const ROW_H = 88;
+  const FONT_SIZE = 30;
+  const SPEED_X = 6;
+  const SPEED_Y = 20;
+
+  let w = 0, h = 0, ox = 0, oy = 0, last = 0;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+
+  function frame(ts) {
+    const dt = Math.min((ts - last) / 1000, 0.05);
+    last = ts;
+    ox = (ox + SPEED_X * dt) % COL_W;
+    oy = (oy + SPEED_Y * dt) % ROW_H;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.font = `800 ${FONT_SIZE}px ui-monospace,"Cascadia Mono","Fira Code",monospace`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const cols = Math.ceil(w / COL_W) + 2;
+    const rows = Math.ceil(h / ROW_H) + 2;
+
+    for (let row = -1; row < rows; row++) {
+      const stagger = (row & 1) ? COL_W * 0.5 : 0;
+      for (let col = -1; col < cols; col++) {
+        const x = col * COL_W + stagger + ox;
+        const y = row * ROW_H + oy;
+        const pulse = 0.5 + 0.5 * Math.sin(ts * 0.0007 + row * 1.3 + col * 0.9);
+        const isGreen = ((row + col) & 1) === 0;
+        ctx.globalAlpha = 0.06 + 0.07 * pulse;
+        ctx.fillStyle = isGreen ? "#54ff9f" : "#9f7fff";
+        ctx.shadowColor = isGreen ? "#54ff9f" : "#7f46ff";
+        ctx.shadowBlur = 12 + 10 * pulse;
+        ctx.fillText(WORD, x, y);
+      }
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  window.addEventListener("resize", resize, { passive: true });
+  requestAnimationFrame(function (ts) { last = ts; requestAnimationFrame(frame); });
+})();

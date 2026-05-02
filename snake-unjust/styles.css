@@ -33,29 +33,15 @@ body {
   overflow-x: hidden;
 }
 
-body::before {
-  content: "";
+#bg-canvas {
   position: fixed;
-  inset: -20vmin;
-  background-image: url("./public/logo/ChatGPT Image May 3, 2026, 02_09_51 AM.png");
-  background-repeat: no-repeat;
-  background-position: center 34%;
-  background-size: min(156vmin, 1800px);
-  opacity: 0.24;
-  filter:
-    saturate(1.5)
-    hue-rotate(-20deg)
-    brightness(0.56)
-    contrast(1.08)
-    drop-shadow(0 0 18px rgba(84, 255, 159, 0.9))
-    drop-shadow(0 0 42px rgba(84, 255, 159, 0.72))
-    drop-shadow(0 0 84px rgba(84, 255, 159, 0.4))
-    drop-shadow(0 0 136px rgba(127, 70, 255, 0.32));
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 0;
-  transform-origin: center;
   mix-blend-mode: screen;
-  animation: neonCascade 14s ease-in-out infinite;
+  will-change: contents;
 }
 
 body::after {
@@ -68,54 +54,11 @@ body::after {
     repeating-linear-gradient(90deg, rgba(84, 255, 159, 0.05) 0 1px, transparent 1px 34px),
     repeating-linear-gradient(180deg, rgba(84, 255, 159, 0.1) 0 2px, transparent 2px 18px),
     repeating-linear-gradient(180deg, rgba(127, 70, 255, 0.045) 0 1px, transparent 1px 30px);
-  background-size: auto, auto, auto, auto;
   mix-blend-mode: screen;
   z-index: 0;
-  opacity: 0.24;
-  animation: cascadeSweep 14s linear infinite;
+  opacity: 0.18;
 }
 
-@keyframes neonCascade {
-  0%,
-  100% {
-    opacity: 0.2;
-    transform: translateY(0) scale(1);
-    filter:
-      saturate(1.45)
-      hue-rotate(-18deg)
-      brightness(0.52)
-      contrast(1.04)
-      drop-shadow(0 0 18px rgba(84, 255, 159, 0.74))
-      drop-shadow(0 0 38px rgba(84, 255, 159, 0.54))
-      drop-shadow(0 0 86px rgba(127, 70, 255, 0.26));
-  }
-  50% {
-    opacity: 0.34;
-    transform: translateY(-2.2vmin) scale(1.07);
-    filter:
-      saturate(1.58)
-      hue-rotate(-10deg)
-      brightness(0.72)
-      contrast(1.1)
-      drop-shadow(0 0 26px rgba(84, 255, 159, 1))
-      drop-shadow(0 0 68px rgba(84, 255, 159, 0.82))
-      drop-shadow(0 0 148px rgba(127, 70, 255, 0.46));
-  }
-}
-
-@keyframes cascadeSweep {
-  0% {
-    transform: translateY(-14px);
-    opacity: 0.16;
-  }
-  50% {
-    opacity: 0.28;
-  }
-  100% {
-    transform: translateY(18px);
-    opacity: 0.16;
-  }
-}
 
 button,
 select {
@@ -145,44 +88,48 @@ select {
   justify-content: center;
 }
 
-.app-logo {
-  width: min(760px, 92vw);
-  height: clamp(100px, 16vw, 168px);
-  object-fit: contain;
-  display: block;
-  padding: 12px 30px;
-  border: 1px solid rgba(84, 255, 159, 0.74);
+.app-logo-wrap {
+  display: inline-block;
   border-radius: 24px;
-  background:
-    linear-gradient(180deg, rgba(127, 70, 255, 0.08), rgba(84, 255, 159, 0.04)),
-    rgba(3, 8, 6, 0.66);
   box-shadow:
-    0 0 0 1px rgba(84, 255, 159, 0.24) inset,
     0 0 24px rgba(84, 255, 159, 0.52),
     0 0 54px rgba(127, 70, 255, 0.28),
     0 20px 58px rgba(0, 0, 0, 0.4);
-  transform-origin: center;
-  animation: logoRadiate 4.8s ease-in-out infinite;
+  animation: logoGlow 4.8s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
-@keyframes logoRadiate {
-  0%,
-  100% {
-    border-color: rgba(69, 240, 170, 0.42);
+.app-logo {
+  width: min(430px, 48vw);
+  height: clamp(70px, 11vw, 130px);
+  object-fit: cover;
+  display: block;
+  padding: 0;
+  border: 1px solid rgba(84, 255, 159, 0.74);
+  border-radius: 24px;
+  background: #000;
+  will-change: transform;
+  animation: logoFloat 4.8s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-3px) scale(1.012); }
+}
+
+@keyframes logoGlow {
+  0%, 100% {
     box-shadow:
-      0 0 0 1px rgba(69, 240, 170, 0.12) inset,
-      0 0 18px rgba(69, 240, 170, 0.2),
+      0 0 18px rgba(69, 240, 170, 0.22),
       0 18px 48px rgba(0, 0, 0, 0.3);
-    transform: translateY(0) scale(1);
+    opacity: 0.88;
   }
   50% {
-    border-color: rgba(69, 240, 170, 0.88);
     box-shadow:
-      0 0 0 1px rgba(69, 240, 170, 0.35) inset,
-      0 0 34px rgba(69, 240, 170, 0.66),
-      0 0 74px rgba(154, 92, 255, 0.4),
+      0 0 38px rgba(69, 240, 170, 0.68),
+      0 0 78px rgba(154, 92, 255, 0.38),
       0 22px 62px rgba(0, 0, 0, 0.38);
-    transform: translateY(-2px) scale(1.015);
+    opacity: 1;
   }
 }
 
