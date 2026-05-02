@@ -454,7 +454,7 @@ class UIManager {
 
   syncOverlay() {
     const overlays = {
-      [GameState.IDLE]: ["hidden player mode", "Snake Unjust", "Press Enter or tap Start to wake the mini-game.", "Start"],
+      [GameState.IDLE]: ["hidden player mode", "FAKEunjust", "Press Enter or tap Start to wake the mini-game.", "Start"],
       [GameState.LOADING]: ["buffering", "Buffering...", "Signal found. Preparing the grid.", "Buffering..."],
       [GameState.PAUSED]: ["paused", "Paused", "Press Space or tap Resume to continue.", "Resume"],
       [GameState.GAME_OVER]: ["signal lost", "Game Over", `Final score ${this.game.score}. Press Enter to restart.`, "Restart"],
