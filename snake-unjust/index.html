@@ -92,15 +92,12 @@
             Sound
           </label>
         </section>
-      </section>
-
-      <nav class="touch-pad" aria-label="Touch controls">
-        <button data-dir="up" type="button" aria-label="Move up">^</button>
-        <button data-dir="left" type="button" aria-label="Move left">&lt;</button>
-        <button data-dir="down" type="button" aria-label="Move down">v</button>
-        <button data-dir="right" type="button" aria-label="Move right">&gt;</button>
-      </nav>
-
+        <nav class="touch-pad" aria-label="Touch controls">
+          <button data-dir="up" type="button" aria-label="Move up">^</button>
+          <button data-dir="left" type="button" aria-label="Move left">&lt;</button>
+          <button data-dir="down" type="button" aria-label="Move down">v</button>
+          <button data-dir="right" type="button" aria-label="Move right">&gt;</button>
+        </nav>
       </section>
 
       <section class="player" data-panel="snakeunjust" id="playerSnakeUnjust" hidden>
@@ -110,11 +107,10 @@
             <span>snakeunjust</span>
           </div>
           <div class="metrics" aria-live="polite">
-            <span>Score <strong id="score2">0</strong></span>
-            <span>Best <strong id="bestScore2">0</strong></span>
-            <span>Lvl <strong id="level2">1</strong></span>
-            <span>Speed <strong id="speed2">7</strong></span>
-            <span>Mode <strong id="mode2">Classic</strong></span>
+            <span>Escaped <strong id="escaped2">0</strong>/<strong id="total2">0</strong></span>
+            <span>Moves <strong id="moves2">0</strong></span>
+            <span>Level <strong id="level2">1</strong></span>
+            <span>State <strong id="state2">Intro</strong></span>
           </div>
         </div>
 
@@ -128,7 +124,8 @@
             <p id="overlayText2">Press Enter or tap Start.</p>
             <div class="help-panel" id="helpPanel2" aria-label="How to play">
               <p><strong>How to play</strong></p>
-              <p>Collect the mini snakes. Every pickup grows your trail and score.</p>
+              <p>Collect only the highlighted target-color mini snake.</p>
+              <p>Wrong color ends the run. Correct pickups grow snake and score.</p>
               <p>Combo rises when pickups are within 4 seconds. Max x5.</p>
               <p>Space pause, Enter start/restart, Escape settings.</p>
             </div>
@@ -142,6 +139,9 @@
             <span id="timelineFill2"></span>
           </div>
           <button class="icon-button" id="soundButton2" type="button" aria-label="Toggle sound">S</button>
+          <button class="settings-toggle" id="undoButton2" type="button">Undo</button>
+          <button class="settings-toggle" id="hintButton2" type="button">Hint</button>
+          <button class="settings-toggle" id="resetButton2" type="button">Reset</button>
           <button class="settings-toggle" id="settingsButton2" type="button">Settings</button>
         </div>
 
