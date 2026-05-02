@@ -139,21 +139,29 @@ select {
 }
 
 .tab {
-  min-height: 38px;
-  padding: 0 14px;
+  min-height: 52px;
+  padding: 0 28px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 10px;
   color: var(--muted);
   background: linear-gradient(180deg, rgba(8, 20, 15, 0.96), rgba(5, 11, 8, 0.96));
   text-transform: lowercase;
+  font-size: 1rem;
   cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.tab:hover {
+  color: var(--text);
+  border-color: rgba(84, 255, 159, 0.5);
+  box-shadow: 0 0 18px rgba(84, 255, 159, 0.25), 0 0 6px rgba(84, 255, 159, 0.15);
 }
 
 .tab.is-active {
   color: var(--text);
   border-color: rgba(84, 255, 159, 0.7);
   background: linear-gradient(180deg, rgba(24, 53, 41, 0.96), rgba(11, 24, 19, 0.96));
-  box-shadow: 0 0 16px rgba(84, 255, 159, 0.16);
+  box-shadow: 0 0 24px rgba(84, 255, 159, 0.28), 0 0 8px rgba(84, 255, 159, 0.18);
 }
 
 .player {
