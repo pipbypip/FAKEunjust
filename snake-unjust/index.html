@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Snake Unjust</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell" aria-label="Snake Unjust game">
+      <section class="player" id="player">
+        <div class="status-bar">
+          <div class="brand">
+            <span class="signal-dot" aria-hidden="true"></span>
+            <span>Snake Unjust</span>
+          </div>
+          <div class="metrics" aria-live="polite">
+            <span>Score <strong id="score">0</strong></span>
+            <span>Best <strong id="bestScore">0</strong></span>
+            <span>Lvl <strong id="level">1</strong></span>
+            <span>Speed <strong id="speed">7</strong></span>
+            <span>Mode <strong id="mode">Classic</strong></span>
+          </div>
+        </div>
+
+        <div class="screen-wrap">
+          <canvas id="gameCanvas" width="640" height="640" aria-label="Game board"></canvas>
+          <div class="hud-chip" id="comboChip">Combo x1</div>
+          <div class="scanlines" id="scanlines" aria-hidden="true"></div>
+          <div class="overlay" id="overlay">
+            <p class="kicker" id="overlayKicker">hidden player mode</p>
+            <h1 id="overlayTitle">Snake Unjust</h1>
+            <p id="overlayText">Press Enter or tap Start to wake the mini-game.</p>
+            <div class="help-panel" id="helpPanel" aria-label="How to play">
+              <p><strong>How to play</strong></p>
+              <p>Move with Arrow keys or WASD. Eat food to grow and score.</p>
+              <p>Space pauses. Enter starts or restarts. Escape opens settings.</p>
+              <p>Touch: swipe or use the D-pad. Avoid walls in Classic mode.</p>
+            </div>
+            <button class="primary" id="primaryAction" type="button">Start</button>
+          </div>
+        </div>
+
+        <div class="control-bar">
+          <button class="icon-button" id="pauseButton" type="button" aria-label="Pause or resume">II</button>
+          <div class="fake-timeline" aria-hidden="true">
+            <span id="timelineFill"></span>
+          </div>
+          <button class="icon-button" id="soundButton" type="button" aria-label="Toggle sound">S</button>
+          <button class="settings-toggle" id="settingsButton" type="button">Settings</button>
+        </div>
+
+        <section class="settings" id="settingsPanel" aria-label="Game settings" hidden>
+          <label>
+            Grid
+            <select id="gridSize">
+              <option value="16">16 x 16</option>
+              <option value="20">20 x 20</option>
+              <option value="24">24 x 24</option>
+              <option value="30">30 x 30</option>
+            </select>
+          </label>
+          <label>
+            Mode
+            <select id="wallMode">
+              <option value="classic">Classic walls</option>
+              <option value="wrap">Wrap</option>
+            </select>
+          </label>
+          <label>
+            Difficulty
+            <select id="difficulty">
+              <option value="chill">Chill</option>
+              <option value="normal">Normal</option>
+              <option value="boss">Boss</option>
+            </select>
+          </label>
+          <label>
+            Visual filter
+            <select id="visualFilter">
+              <option value="clean">Clean</option>
+              <option value="scanline">Scanline</option>
+            </select>
+          </label>
+          <label class="check">
+            <input id="soundEnabled" type="checkbox" />
+            Sound
+          </label>
+        </section>
+      </section>
+
+      <nav class="touch-pad" aria-label="Touch controls">
+        <button data-dir="up" type="button" aria-label="Move up">^</button>
+        <button data-dir="left" type="button" aria-label="Move left">&lt;</button>
+        <button data-dir="down" type="button" aria-label="Move down">v</button>
+        <button data-dir="right" type="button" aria-label="Move right">&gt;</button>
+      </nav>
+    </main>
+
+    <script src="./main.js" defer></script>
+  </body>
+</html>
