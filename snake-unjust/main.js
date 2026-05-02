@@ -23,13 +23,13 @@ class StorageManager {
     this.settingsKey = `${prefix}.settings`;
     this.defaults = { gridSize: 20, mode: "classic", sound: true, visualFilter: "scanline", difficulty: "normal" };
   }
-  loadBest() { return Number(localStorage.getItem(this.bestKey) || 0); }
-  saveBest(score) { localStorage.setItem(this.bestKey, String(score)); }
+  loadBest() { try { return Number(localStorage.getItem(this.bestKey) || 0); } catch { return 0; } }
+  saveBest(score) { try { localStorage.setItem(this.bestKey, String(score)); } catch {} }
   loadSettings() {
     try { return { ...this.defaults, ...JSON.parse(localStorage.getItem(this.settingsKey) || "{}") }; }
     catch { return { ...this.defaults }; }
   }
-  saveSettings(settings) { localStorage.setItem(this.settingsKey, JSON.stringify(settings)); }
+  saveSettings(settings) { try { localStorage.setItem(this.settingsKey, JSON.stringify(settings)); } catch {} }
 }
 
 class AudioManager {
